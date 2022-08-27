@@ -1,67 +1,94 @@
 /*global chrome,browser*/
 // If your extension doesn't need a background script, just leave this file empty
-import axios from 'axios'
-import xml2js from 'xml2js'
+// const URL_NE = `https://script.google.com/macros/s/AKfycbz7zuBnhv_a65GmdySAZ5G5w6I61hWOJ84SZJFyY5Q/dev`;
+const URL_NE = `https://script.google.com/macros/s/AKfycbymbnDy20JJDpcqfTE3C_78I0bmhNmTxQJXD-offVI8SnsBIU78WnvxJpCA0X7gR8q0/exec`;
+let notificationID;
 
-chrome.storage.local.get(['storage'], (result) => {
-  if (result.storage && result.storage.gmail) {
-    taskInBackground()
+chrome.storage.local.set({ storage: {} })
+
+chrome.storage.local.get(["storage"], (result) => {
+  if (result.storage) {
+    taskInBackground();
   } else {
-    chrome.browserAction.setBadgeText({ text: '' })
+    chrome.action.setBadgeText({ text: `...` })
   }
-})
+});
 
 setInterval(function () {
-  chrome.storage.local.get(['storage'], (result) => {
-    if (result.storage && result.storage.gmail) {
-      taskInBackground()
+  chrome.storage.local.get(["storage"], (result) => {
+    if (result.storage) {
+      taskInBackground();
     } else {
-      chrome.browserAction.setBadgeText({ text: '' })
+      chrome.action.setBadgeText({ text: `...` })
     }
-  })
-}, 20 * 1000)
+  });
+}, 60 * 1000);
 
-// This needs to be an export due to typescript implementation limitation of needing '--isolatedModules' tsconfig
-export function taskInBackground() {
-  axios
-    .get('https://mail.google.com/mail/u/1/feed/atom')
-    .then(function (response) {
-      const xml = response.data
-      xml2js.parseString(xml, (err, apiResponse) => {
-        if (err) {
-          throw err
-        }
-        chrome.browserAction.setBadgeBackgroundColor({ color: '#005282' })
+export async function taskInBackground() {
+  try {
+    const fetchTasks = await fetch(URL_NE);
+    const parsedTasks = await fetchTasks.json();
+    const tasksCount = parsedTasks.notify.length;
+    if (tasksCount > 0) {
+      notificationID = doRenderNotification({
+        type: "basic",
+        title: "New tasks!",
+        message: `You have ${tasksCount} pending tasks.`,
+        contextMessage: "",
+        isUpdate: false,
+      });
+      console.log({ notificationID });
+    }
+  } catch (error) {
+    if (error.status === 401) {
+      chrome.storage.local.get(["storage"], (result) => {
+        let isGmailLogedIn = false;
+        chrome.storage.local.set({ isGmailLogedIn }, function () {});
+      });
 
-        let count = 0
-        chrome.storage.local.get(['readTime'], (result) => {
-          let lastReadTime = new Date(result.readTime)
+      chrome.browserAction.setBadgeBackgroundColor({ color: "red" });
+      chrome.browserAction.setBadgeText({
+        text: "!",
+      });
+    }
+  }
+}
 
-          if (apiResponse.feed.entry) {
-            for (let i = 0; i < apiResponse.feed.entry.length; i++) {
-              let mDate = new Date(apiResponse.feed.entry[i].modified[0])
-              if (mDate > lastReadTime) count++
-            }
-            chrome.browserAction.setBadgeText({
-              text: count === '0' ? '' : count >= 20 ? '20+' : count.toString(),
-            })
-          }
-        })
-        let isGmailLogedIn = true
-        chrome.storage.local.set({ isGmailLogedIn }, function () {})
-      })
-    })
-    .catch(function (error) {
-      if (error.status === 401) {
-        chrome.storage.local.get(['storage'], (result) => {
-          let isGmailLogedIn = false
-          chrome.storage.local.set({ isGmailLogedIn }, function () {})
-        })
+function doRenderNotification({
+  type,
+  title,
+  message,
+  contextMessage,
+  isUpdate,
+}) {
+  const baseNotificationOptions = {
+    iconUrl: "../img/icon-48.png",
+    requireInteraction: true,
+    buttons: [
+      {
+        title: "Okay",
+      },
+    ],
+  };
 
-        chrome.browserAction.setBadgeBackgroundColor({ color: 'red' })
-        chrome.browserAction.setBadgeText({
-          text: '!',
-        })
-      }
-    })
+  if (isUpdate) {
+    return chrome.notifications.update({
+      notificationId: notificationID,
+      options: {
+        type,
+        title,
+        message,
+        contextMessage,
+        ...baseNotificationOptions,
+      },
+    });
+  } else {
+    return chrome.notifications.create({
+      type,
+      title,
+      message,
+      contextMessage,
+      ...baseNotificationOptions,
+    });
+  }
 }

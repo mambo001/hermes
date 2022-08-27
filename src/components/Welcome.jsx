@@ -1,33 +1,25 @@
 /*global chrome,browser*/
-import React, { Component } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { goTo } from 'react-chrome-extension-router'
-import Settings from './Settings'
-import '../App.css'
-import Notifications from './Notifications'
-import 'bootstrap/dist/css/bootstrap.min.css'
-import { Form } from 'react-bootstrap'
+import React, { Component } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { goTo } from "react-chrome-extension-router";
+import Settings from "./Settings";
+import "../App.css";
+import Notifications from "./Notifications";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Form } from "react-bootstrap";
 
 class Welcome extends Component {
   state = {
-    enabled: false,
-    isGmailLogedIn: false,
-  }
+    enabled: true,
+  };
 
   componentDidMount = () => {
-    chrome.storage.local.get(['storage'], (result) => {
-      if (result.storage.gmail)
-        this.setState({
-          enabled: true,
-        })
-    })
-
-    chrome.storage.local.get(['isGmailLogedIn'], (result) => {
+    chrome.storage.local.get(["storage"], (result) => {
       this.setState({
-        isGmailLogedIn: result.isGmailLogedIn,
-      })
-    })
-  }
+        enabled: true,
+      });
+    });
+  };
 
   welcomePage = () => {
     return (
@@ -40,7 +32,10 @@ class Welcome extends Component {
         <div>
           <h2>Enable notifications</h2>
           <p>
-          Make sure you're logged into Gmail. Navigate to settings and allow Extention to read Gmail notifications.
+            -Input endpoint URL
+          </p>
+          <p>
+            -Parameters?
           </p>
         </div>
         <div>
@@ -49,15 +44,11 @@ class Welcome extends Component {
           </button>
         </div>
       </div>
-    )
-  }
+    );
+  };
   render() {
-    return this.state.enabled && this.state.isGmailLogedIn ? (
-      <Notifications />
-    ) : (
-      this.welcomePage()
-    )
+    return this.state.enabled ? this.welcomePage() : this.welcomePage();
   }
 }
 
-export default Welcome
+export default Welcome;

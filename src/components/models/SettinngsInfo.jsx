@@ -22,8 +22,8 @@ class SettinngsInfo extends Component {
 
           <Modal.Body>
                 We support the following platforms. To get notified,
-                   you must be logged in to that platform in the browser before using Bluebell.
-                    When Bluebell is able to fetch the service, it will update with a green sync icon
+                   you must be logged in to that platform in the browser before using Hermes.
+                    When Hermes is able to fetch the service, it will update with a green sync icon
           </Modal.Body>
 
           <Modal.Footer>

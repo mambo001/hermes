@@ -1,15 +1,15 @@
 {
-  "manifest_version": 2,
-  "version": "0.1.3",
-  "short_name": "Blue Bell: Gmail™ notification tool",
-  "name": "Blue Bell Gmail™ notification tool",
-  "description": "Blue Bell Gmail™ notification tool allows users to view new emails easily.",
-  "browser_action": {
-    "default_title": "Blue Bell",
+  "manifest_version": 3,
+  "version": "0.1.6",
+  "short_name": "Hermes: generic notification tool",
+  "name": "Hermes: generic notification tool",
+  "description": "Hermes: generic notification tool that allows users to get notified in a targeted manner.",
+  "action": {
+    "default_title": "Hermes",
     "default_popup": "popup.html"
   },
   "background": {
-    "scripts": ["./js/jquery-3.6.0.min.js","background.bundle.js"]
+    "service_worker": "background.bundle.js"
   },
   "content_scripts": [
     {
@@ -24,7 +24,7 @@
   },
 
   "permissions": [
-    "storage"
-  ],
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+    "storage",
+    "notifications"	
+  ]
 }
